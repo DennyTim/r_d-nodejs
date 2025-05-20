@@ -1,16 +1,14 @@
 const [, , param] = process.argv;
 
-const sumList = (list) => {
-  if (Array.isArray(list) && !list.some(item => Array.isArray(item))) {
-    return list.reduce((acc, curr) => acc + curr, 0);
-  } else {
-    return sumList(list.flat());
-  }
-}
+const sumList = (list) => list.reduce((acc, curr) => Array.isArray(curr) ? acc + sumList(curr) : acc + curr, 0)
 
 (function(list) {
   if (typeof list === "string") {
     list = JSON.parse(list);
+  }
+
+  if (!Array.isArray(list)) {
+    throw new Error('Param isn\'t a list')
   }
 
   const result = sumList(list);

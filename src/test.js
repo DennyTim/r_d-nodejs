@@ -27,7 +27,6 @@ describe("HTTP Server Tests", () => {
     await new Promise((resolve) => {
       httpServer.close(() => {
         Service.deleteUser(userId);
-        console.log("Test server closed");
         resolve();
       });
     });
@@ -49,7 +48,7 @@ describe("HTTP Server Tests", () => {
     assert.strictEqual(data, "Not Found", "Not Found");
   });
 
-  test("should return \"{ \"data\": { name: \"John Doe\", age: 30, role: \"user\" } }\" for unknown routes", async () => {
+  test("should return \"{ name: \"John Doe\", age: 30, role: \"user\" }\" for /POST Create User", async () => {
     const payload = { name: "John Doe", age: 30, role: "user" };
 
     const response = await fetch(`http://localhost:${process.env.PORT}/users`, {
@@ -62,7 +61,7 @@ describe("HTTP Server Tests", () => {
 
     userId = id;
 
-    assert.equal(response.status, 201);
-    assert.deepEqual({ name, age, role }, payload);
+    assert.equal(response.status, 201, "Expected status code 201");
+    assert.deepEqual({ name, age, role }, payload, "Expected data  name: \"John Doe\", age: 30, role: \"user\" }");
   });
 });

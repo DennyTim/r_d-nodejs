@@ -32,7 +32,7 @@ export const routesScanner = async (directory, base) => {
       const handlerModule = await import(pathToFileURL(endpointPath));
       const handler = handlerModule.default;
 
-      routes.push({ path: "/" + base.replace(/\\/g, '/'), handler });
+      routes.push({ path: "/" + base.replace(/\\/g, "/"), handler });
     }
   }
 };

@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
 
-export const routes = [];
+const routes = [];
 
 export const routesScanner = async (directory, base) => {
   if (!fs.existsSync(directory)) {
@@ -32,7 +32,9 @@ export const routesScanner = async (directory, base) => {
       const handlerModule = await import(pathToFileURL(endpointPath));
       const handler = handlerModule.default;
 
-      routes.push({ path: "/" + base.split(path.sep).filter(Boolean).join(), handler });
+      routes.push({ path: "/" + base.replace(/\\/g, '/'), handler });
     }
   }
 };
+
+export const getRoutes = () => routes;

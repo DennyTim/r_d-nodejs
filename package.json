@@ -1,20 +1,21 @@
 {
-  "name": "r_d-nodejs",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "src/index.js",
-  "scripts": {
-    "start": "node --env-file=.env src/index.js",
-    "lint": "eslint src",
-    "lint:fix": "eslint src --fix"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "@eslint/js": "^9.29.0",
-    "eslint": "^9.29.0",
-    "globals": "^16.2.0"
-  }
+    "name": "r_d-nodejs",
+    "version": "1.0.0",
+    "type": "module",
+    "main": "src/index.js",
+    "scripts": {
+        "start": "node --env-file=.env src/index.js",
+        "lint": "eslint src",
+        "lint:fix": "eslint src --fix",
+        "test": "node --test --env-file=.env src/test.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "devDependencies": {
+        "@eslint/js": "^9.29.0",
+        "eslint": "^9.29.0",
+        "globals": "^16.2.0"
+    }
 }

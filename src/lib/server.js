@@ -1,6 +1,9 @@
 import * as http from "node:http";
 import * as url from "node:url";
 import { getRoutes } from "./router.js";
+import { sendJSON } from "../helpers/send-json.js";
+import { generateError } from "../helpers/generate-error.js";
+import { METHOD_NOT_ALLOWED, NOT_FOUND_ERROR, PAYLOAD_ERROR, ROUTE_NOT_FOUND } from "../helpers/error-msg.js";
 
 export const server = http.createServer(
   async (req, res) => {
@@ -36,14 +39,11 @@ export const server = http.createServer(
         if (routeHandler[method]) {
           return routeHandler[method](req, res);
         } else {
-
-          res.writeHead(405);
-          return res.end(`Method ${method} Not Allowed`);
+          return sendJSON(res, generateError(METHOD_NOT_ALLOWED), 405);
         }
       }
     }
 
-    res.writeHead(404);
-    res.end("Not Found");
+    return sendJSON(res, generateError(ROUTE_NOT_FOUND), 404);
   }
 );

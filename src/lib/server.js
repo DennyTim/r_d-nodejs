@@ -3,7 +3,7 @@ import * as url from "node:url";
 import { getRoutes } from "./router.js";
 import { sendJSON } from "../helpers/send-json.js";
 import { generateError } from "../helpers/generate-error.js";
-import { METHOD_NOT_ALLOWED, NOT_FOUND_ERROR, PAYLOAD_ERROR, ROUTE_NOT_FOUND } from "../helpers/error-msg.js";
+import { METHOD_NOT_ALLOWED, ROUTE_NOT_FOUND } from "../helpers/error-msg.js";
 
 export const server = http.createServer(
   async (req, res) => {

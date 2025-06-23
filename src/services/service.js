@@ -57,20 +57,53 @@ export default class Service {
   }
 
   static getStats() {
-    const now = new Date();
-    const MS_PER_DAY = 1000 * 60 * 60 * 24;
+    const percentFor = (timestamps, rangeDays, freq) => {
+      const now = new Date();
+      const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
-    const percentFor = (timestamps, rangeDays) => {
       const recentDates = timestamps
-        .map((date) => new Date(date).toISOString().split("T")[0])
-        .filter((item) => {
-          const then = new Date(item);
-          const daysGone = Math.floor((now - then) / MS_PER_DAY);
-          return daysGone < rangeDays;
+        .map(ts => new Date(ts))
+        .filter(date => {
+          const daysAgo = Math.floor((now - date) / MS_PER_DAY);
+          return daysAgo < rangeDays;
         });
 
-      const unique = new Set(recentDates);
-      return `${unique.size}/${rangeDays} (${((unique.size / rangeDays) * 100).toFixed(1)}%)`;
+      const countedSet = new Set();
+
+      for (const date of recentDates) {
+        if (freq === "daily") {
+          countedSet.add(date.toISOString().split("T")[0]);
+        } else if (freq === "weekly") {
+          countedSet.add(getWeekKey(date));
+        } else if (freq === "monthly") {
+          countedSet.add(`${date.getFullYear()}-${date.getMonth() + 1}`);
+        }
+      }
+
+      const completed = countedSet.size;
+      let denominator;
+
+      if (freq === "daily") {
+        denominator = rangeDays;
+      } else if (freq === "weekly") {
+        denominator = Math.ceil(rangeDays / 7);
+      } else if (freq === "monthly") {
+        denominator = Math.ceil(rangeDays / 30);
+      } else {
+        return "Invalid frequency";
+      }
+
+      const percent = (completed / denominator) * 100;
+      return `${completed}/${denominator} (${percent.toFixed(1)}%)`;
+    };
+
+    const getWeekKey = (date) => {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+      const week1 = new Date(d.getFullYear(), 0, 4);
+      const weekNumber = Math.round(((d - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7 + 1);
+      return `${d.getFullYear()}-W${weekNumber}`;
     };
 
     const habits = Model.getAll();
@@ -78,10 +111,11 @@ export default class Service {
     if (habits.length > 0) {
       habits.forEach((habit) => {
         const completions = habit.completionTimestamps || [];
+        const freq = habit.freq || 'daily';
 
         console.log(`=> ${habit.name}`);
-        console.log(`Last 7 days:  ${percentFor(completions, 7)}`);
-        console.log(`Last 30 days: ${percentFor(completions, 30)}`);
+        console.log(`Last 7 days:  ${percentFor(completions, 7, freq)}`);
+        console.log(`Last 30 days: ${percentFor(completions, 30, freq)}`);
       });
     } else {
       console.log("No habits.");

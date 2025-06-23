@@ -111,7 +111,7 @@ export default class Service {
     if (habits.length > 0) {
       habits.forEach((habit) => {
         const completions = habit.completionTimestamps || [];
-        const freq = habit.freq || 'daily';
+        const freq = habit.freq || "daily";
 
         console.log(`=> ${habit.name}`);
         console.log(`Last 7 days:  ${percentFor(completions, 7, freq)}`);

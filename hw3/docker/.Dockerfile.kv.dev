@@ -1,0 +1,17 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+RUN npm install -g nodemon
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+ENV REDIS_URL=http://redis:4000
+ENV PORT=3000
+
+EXPOSE 3000
+
+CMD ["nodemon", "src/index.js"]

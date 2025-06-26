@@ -1,0 +1,16 @@
+FROM node:18-alpine
+
+RUN apk add --no-cache nodejs tini
+
+WORKDIR /app
+COPY . .
+
+RUN if [ -f package.json ]; then npm install; fi
+
+ENV PORT=4000
+
+EXPOSE 4000
+
+ENTRYPOINT ["/sbin/tini", "--"]
+
+CMD ["node", "src/index.js"]

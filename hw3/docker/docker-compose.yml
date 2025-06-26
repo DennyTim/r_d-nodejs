@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  redis:
+    build:
+      context: ../redis-like
+      dockerfile: ../docker/.Dockerfile.rds
+    container_name: redis-like
+    expose:
+      - "4000"
+    networks:
+      internal:
+        aliases:
+          - redis
+
+  kv:
+    build:
+      context: ../kv-server
+      dockerfile: ../docker/.Dockerfile.kv
+    container_name: kv-server
+    ports:
+      - "8080:3000"
+    environment:
+      - REDIS_URL=http://redis:4000
+    depends_on:
+      - redis
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge

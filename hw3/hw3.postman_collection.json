@@ -1,0 +1,128 @@
+{
+	"info": {
+		"_postman_id": "5065cb2d-6b5b-4d53-ba71-0c4002f73486",
+		"name": "robo_dreams",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "7295332"
+	},
+	"item": [
+		{
+			"name": "hw3",
+			"item": [
+				{
+					"name": "redis-like",
+					"item": [
+						{
+							"name": "[REDIS] Get value by key",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:3001/get?key=foo",
+									"host": [
+										"localhost"
+									],
+									"port": "3001",
+									"path": [
+										"get"
+									],
+									"query": [
+										{
+											"key": "key",
+											"value": "foo"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "[REDIS] Set value by key",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"key\": \"foo\", \r\n    \"value\": \"bar\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:3001/set",
+									"host": [
+										"localhost"
+									],
+									"port": "3001",
+									"path": [
+										"set"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "kv-server",
+					"item": [
+						{
+							"name": "[KV SERVER] Get value",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:3002/kv/foo1",
+									"host": [
+										"localhost"
+									],
+									"port": "3002",
+									"path": [
+										"kv",
+										"foo1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "[KV SERVER] Set value",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"key\": \"foo1\", \r\n    \"value\": \"bar\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost:3002/kv",
+									"host": [
+										"localhost"
+									],
+									"port": "3002",
+									"path": [
+										"kv"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	]
+}

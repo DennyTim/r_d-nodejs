@@ -1,34 +1,36 @@
-################# 1. deps (npm + pnpm) #################################
+################# 1. deps #################################
 FROM node:20-alpine AS deps
-WORKDIR /workspace
-RUN corepack enable
-
-# копіюємо lock-файли
+WORKDIR /app
 COPY package*.json ./
+RUN npm ci --omit=dev
 
-RUN --mount=type=cache,target=/root/.npm  \
-    npm ci --omit=dev
-
-################# 2. backend prune (залишаємо prod-deps) ##############
-FROM node:20-alpine AS backend
-WORKDIR /workspace
-
-COPY --from=deps /workspace/node_modules ./node_modules
+################# 2. build ################################
+FROM deps AS builder
 COPY . .
-RUN npm prune --omit=dev        # тільки тут випиляємо dev-deps
+RUN node src/build.mjs
 
-################# 3. runtime (tiny) ###################################
+################# 3. backend — prod-only node_modules #####
+FROM deps AS backend
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY package*.json ./
+RUN npm prune --omit=dev  # лишає тільки production-залежності
+
+################# 4. runtime ################################
 FROM alpine:3.19
+
+# Додаємо лише потрібне: nodejs + tini
 RUN apk add --no-cache nodejs tini && \
-    rm -rf /var/cache/apk/*
+    rm -rf /var/cache/apk/* /tmp/* /usr/lib/node_modules/npm/man /usr/share/doc
 
 WORKDIR /app
-COPY --from=backend /workspace/package.json ./package.json
-COPY --from=backend /workspace/dist ./dist
 
-ENV PORT=3000
+# Копіюємо лише runtime-необхідне
+COPY --from=builder /app/dist ./dist
+
 ENV NODE_ENV=production
-EXPOSE 3000
-ENTRYPOINT ["/sbin/tini","--"]
-CMD ["node","dist/server.mjs"]
+ENV PORT=3000
 
+EXPOSE 3000
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "dist/server.mjs"]

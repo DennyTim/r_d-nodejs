@@ -24,14 +24,14 @@ async function bootstrap() {
      *  Swagger
      *  */
     const swaggerCfg = new DocumentBuilder()
-        .setTitle('Tea‑Tracker API')
-        .setDescription('NestJS + TypeScript + Zod')
-        .setVersion('1.0')
+        .setTitle("Tea‑Tracker API")
+        .setDescription("NestJS + TypeScript + Zod")
+        .setVersion("1.0")
         .addBearerAuth()
         .build();
 
     const document = SwaggerModule.createDocument(app, swaggerCfg);
-    SwaggerModule.setup('docs', app, document);
+    SwaggerModule.setup("docs", app, document);
 
     const port = process.env.PORT ?? 3000;
 

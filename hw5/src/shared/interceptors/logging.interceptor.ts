@@ -13,7 +13,7 @@ export class LoggingInterceptor implements NestInterceptor {
     constructor(private readonly logger: LoggerService) {
     }
 
-    intercept(ctx: ExecutionContext, next: CallHandler) {
+    intercept(_: ExecutionContext, next: CallHandler) {
         const now = Date.now();
 
         return next.handle().pipe(

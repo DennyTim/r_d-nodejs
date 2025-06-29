@@ -24,7 +24,10 @@ export default tsEslint.config(
   },
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "off",
+      "semi": ["error", "always"],
+      "quotes": ["error", "double"],
+      "no-console": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-floating-promises": "warn",
       "@typescript-eslint/no-unsafe-argument": "warn"
     }

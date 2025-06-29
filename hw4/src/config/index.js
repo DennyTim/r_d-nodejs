@@ -1,5 +1,5 @@
 import "dotenv/config";
-import pkg from "../../package.json" assert { type: "json" }; // Import version from package.json
+import pkg from "../../package.json" with { type: "json" }; // Import version from package.json
 import { z } from "zod";
 
 const DEFAULT_PORT = 3000;

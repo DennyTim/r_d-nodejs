@@ -8,7 +8,6 @@
         "build": "node src/build.mjs",
         "docker:build": "docker build -f ./multi.Dockerfile -t brew-api:latest .",
         "docker:run": "docker run -p 3000:3000 brew-api",
-        "docker:clean": "docker rm -f $(docker ps -aq --filter 'ancestor=brew-api') 2>/dev/null || true && docker rmi brew-api",
         "dev": "nodemon --experimental-json-modules src/server.js",
         "lint": "eslint src",
         "lint:fix": "eslint src --fix"

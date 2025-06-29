@@ -1,4 +1,4 @@
-export function errorHandler(err, req, res, _next) {
+export function errorHandler(err, req, res) {
   console.error(err);
   req.log.error({ err });
 

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { makeClassInvoker } from "awilix-express";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
-
+import { registry } from "../open-api/registry.js";
 import { BrewController } from "../controllers/brew.controller.js";
 import { BrewDTO } from "../dto/brew.dto.js";
 import { validateParams } from "../middlewares/validate-params.middleware.js";

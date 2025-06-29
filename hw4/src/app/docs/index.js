@@ -4,4 +4,4 @@ import { createZodSpec } from "./open-api.js";
 
 export const generateSpecs = () => {
   return mergeSpecs(jsdocSpec, createZodSpec());
-}
+};

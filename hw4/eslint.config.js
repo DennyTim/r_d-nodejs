@@ -1,21 +1,23 @@
 import { defineConfig } from "eslint/config";
 import js from "@eslint/js";
 import globals from "globals";
+import babelParser from "@babel/eslint-parser";
 
 export default defineConfig([
   {
     files: ["**/*.js"],
     languageOptions: {
+      parser: babelParser,
+      parserOptions: {
+        requireConfigFile: false,
+        sourceType: "module",
+        ecmaVersion: 2022,
+        deprecatedImportAssert: true,
+      },
       ecmaVersion: 2022,
       globals: {
         ...globals.node                 // Buffer, __dirname, require, process …
       }
-    },
-    parser: "@babel/eslint-parser",
-    parserOptions: {
-      requireConfigFile: false,
-      sourceType: "module",
-      ecmaVersion: 2022
     },
     plugins: { js },
     extends: ["js/recommended"],

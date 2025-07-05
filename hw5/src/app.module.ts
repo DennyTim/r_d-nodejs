@@ -7,6 +7,7 @@ import { ConfigModule } from "@nestjs/config";
 
 import getConfig from "./config/configuration";
 import { LoggerMiddleware } from "./shared/middlewares/logger.middleware";
+import { TeaModule } from "./tea/tea.module";
 
 @Module({
     imports: [
@@ -15,7 +16,8 @@ import { LoggerMiddleware } from "./shared/middlewares/logger.middleware";
             load: [
                 getConfig
             ]
-        })
+        }),
+        TeaModule
     ],
     providers: [Logger]
 })

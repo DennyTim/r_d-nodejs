@@ -6,3 +6,10 @@ export interface TeaModel {
     brewTemp?: number;
     notes?: string;
 }
+
+export interface PaginatedResponse {
+    data: TeaModel[];
+    total: number;
+    page: number;
+    pageSize: number;
+}

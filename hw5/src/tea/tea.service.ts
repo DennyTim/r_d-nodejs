@@ -6,44 +6,33 @@ import {
 import { CreateTeaDto } from "../shared/dto/create-tea.dto";
 import { GetAllTeaQueryDto } from "../shared/dto/get-all-query.dto";
 import { UpdateTeaDto } from "../shared/dto/update-tea.dto";
-import { TeaModel } from "../shared/models/tea.model";
+import {
+    PaginatedResponse,
+    TeaModel
+} from "../shared/models/tea.model";
 
 @Injectable()
 export class TeaService {
     #store = new Map<number, TeaModel>();
 
-    public findAll(query: GetAllTeaQueryDto) {
-        const { page = 1, limit = 10, minRating } = query;
+    public findAll(query: GetAllTeaQueryDto): Promise<PaginatedResponse> {
+        const { page = 1, pageSize = 10, minRating = 0 } = query;
 
-        let teaList = [...this.#store.values()];
+        const allTeas = [...this.#store.values()];
+        const filtered = allTeas.filter(t => (t.rating ?? 0) >= minRating);
 
-        if (minRating) {
-            teaList = teaList.filter((tea) => {
-                if (tea.rating) {
-                    return tea.rating >= minRating;
-                }
+        const start = (page - 1) * pageSize;
+        const data = filtered.slice(start, start + pageSize);
 
-                return false;
-            });
-        }
-
-        if (page && limit) {
-            const startIndex = (page - 1) * limit;
-            const endIndex = startIndex + limit;
-            teaList = teaList.slice(startIndex, endIndex);
-
-            return {
-                items: teaList,
-                total: teaList.length,
-                page,
-                limit
-            };
-        }
-
-        return teaList;
+        return Promise.resolve({
+            data: data,
+            total: allTeas.length,
+            page: page,
+            pageSize: pageSize
+        });
     }
 
-    public findById(id: string) {
+    public async findById(id: string): Promise<TeaModel> {
         const teaId = Number(id);
 
         if (isNaN(teaId)) {
@@ -56,18 +45,18 @@ export class TeaService {
             throw new HttpException("Not found", HttpStatus.NOT_FOUND);
         }
 
-        return tea;
+        return Promise.resolve(tea);
     }
 
-    public create(dto: CreateTeaDto): TeaModel {
+    public async create(dto: CreateTeaDto): Promise<TeaModel> {
         const id = Date.now() * 24 * 60 * 60 * 1000;
         const tea = { id, ...dto };
         this.#store.set(id, tea);
 
-        return tea;
+        return Promise.resolve(tea);
     }
 
-    public update(id: string, dto: UpdateTeaDto) {
+    public async update(id: string, dto: UpdateTeaDto) {
         const teaId = Number(id);
 
         if (isNaN(teaId)) {
@@ -91,10 +80,10 @@ export class TeaService {
 
         this.#store.set(tea.id, updatedTea);
 
-        return updatedTea;
+        return Promise.resolve(updatedTea);
     }
 
-    public delete(id: string) {
+    public async delete(id: string) {
         const teaId = Number(id);
 
         if (isNaN(teaId)) {
@@ -107,6 +96,12 @@ export class TeaService {
             throw new HttpException("Not found", HttpStatus.NOT_FOUND);
         }
 
-        return this.#store.delete(teaId);
+        return Promise.resolve(this.#store.delete(teaId));
+    }
+
+    public clearMap() {
+        this.#store.clear();
+
+        console.log("Bye tea‑lovers 👋");
     }
 }

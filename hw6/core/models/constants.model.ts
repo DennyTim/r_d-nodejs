@@ -1,0 +1,10 @@
+export const GUARDS_METADATA = "guards";
+export const PIPES_METADATA = "pipes";
+export const INTERCEPTORS_METADATA = "interceptors";
+export const FILTERS_METADATA = "filters";
+export const MODULE_METADATA = "mini:module";
+export const ROUTES_METADATA = "mini:routes";
+export const PARAM_TYPES_KEY = "design:paramtypes";
+export const MINI_PARAMS = "mini:params";
+export const INJECT_TOKEN_KEY = "custom:inject_token";
+export const CTRL_PREFIX = "mini:prefix";

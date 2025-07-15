@@ -24,6 +24,14 @@ export async function runPipes(
     meta: ArgumentMetadata,
     globalPipes: PipesType[] = []
 ) {
+    if (meta.pipe) {
+        const pipeInstance = isClass(meta.pipe)
+            ? Container.resolve<PipeTransform>(meta.pipe)
+            : meta.pipe;
+
+        return await pipeInstance.transform(value, meta);
+    }
+
     const pipes = getPipes(handler, controllerCls, globalPipes);
 
     let transformed = value;

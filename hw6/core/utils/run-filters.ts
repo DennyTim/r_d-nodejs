@@ -2,6 +2,7 @@ import {
     Request,
     Response
 } from "express";
+import { HttpException } from "../exceptions/http.exception";
 import {
     FILTERS_METADATA,
     Type
@@ -27,6 +28,10 @@ export async function runFilters(
     error: any,
     global: Array<Type> = []
 ) {
+    if (error instanceof HttpException) {
+        return res.status(error.status).json({ message: error.message });
+    }
+
     const filters = getFilters(handler, controllerClass, global);
 
     for (const filter of filters) {

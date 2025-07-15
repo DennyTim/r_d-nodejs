@@ -1,4 +1,5 @@
 import { ParamType } from "./param-type.model";
+import { PipesType } from "./pipes-type.model";
 import { Type } from "./type.model";
 
 export interface ArgumentMetadata {
@@ -7,4 +8,5 @@ export interface ArgumentMetadata {
     readonly metatype?: Type;  // його TS-тип (якщо є)
     readonly data?: string;    // @Body('userId') → 'userId'
     readonly name?: string;    // ім'я функції-методу, якщо декоратор використовується на методі
+    readonly pipe?: PipesType
 }

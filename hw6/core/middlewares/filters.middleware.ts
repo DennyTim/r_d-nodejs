@@ -14,7 +14,9 @@ export const FiltersMiddleware = (
         try {
             await runFilters(Ctl, handler, req, res, err, globalFilters);
         } catch (e) {
-            res.status(500).json({ message: "Unhandled exception in filter chain" });
+            if (!res.headersSent) {
+                res.status(500).json({ message: "Unhandled exception in filter chain" });
+            }
         }
     };
 };

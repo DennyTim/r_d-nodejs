@@ -9,7 +9,11 @@ export class Container {
     private static singletons = new Map<Token, any>();
 
     static register<T>(token: Token<T>, target: any) {
-        this.registry.set(token, target);
+        if (typeof target === "function") {
+            this.registry.set(token, target);
+        } else {
+            this.singletons.set(token, target);
+        }
     }
 
     static resolve<T>(token: Token<T>): T {
@@ -25,7 +29,9 @@ export class Container {
 
         const paramTypes: Token[] = Reflect.getMetadata(PARAM_TYPES_KEY, target) || [];
         const injectMetadata: Record<number, Token> = Reflect.getMetadata(INJECT_TOKEN_KEY, target) || {};
-        const args = paramTypes.map((param, i) => Container.resolve(injectMetadata[i] || param));
+        const args = paramTypes.map((param, i) =>
+            Container.resolve(injectMetadata[i] || param)
+        );
 
         const instance = new target(...args);
 

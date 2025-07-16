@@ -10,12 +10,17 @@ import {
 import { Container } from "./container";
 
 const getFilters = (
-    handler: Function,
-    controllerClass: Function,
+    handler: Function | null,
+    controllerClass: Function | null,
     global: Array<Type> = []
 ): Type[] => {
-    const controllerFilters = Reflect.getMetadata(FILTERS_METADATA, controllerClass) ?? [];
-    const methodFilters = Reflect.getMetadata(FILTERS_METADATA, handler) ?? [];
+    const controllerFilters = controllerClass
+        ? Reflect.getMetadata(FILTERS_METADATA, controllerClass) ?? []
+        : [];
+
+    const methodFilters = handler
+        ? Reflect.getMetadata(FILTERS_METADATA, handler) ?? []
+        : [];
 
     return [...global, ...controllerFilters, ...methodFilters];
 };
@@ -28,14 +33,23 @@ export async function runFilters(
     error: any,
     global: Array<Type> = []
 ) {
-    if (error instanceof HttpException) {
-        return res.status(error.status).json({ message: error.message });
-    }
-
     const filters = getFilters(handler, controllerClass, global);
 
     for (const filter of filters) {
         const instance = Container.resolve(filter);
+
         await instance.catch?.(error, { req, res });
+
+        if (res.headersSent) {
+            return;
+        }
+    }
+
+    if (error instanceof HttpException) {
+        return res.status(error.status).json({ message: error.message });
+    }
+
+    if (!res.headersSent) {
+        res.status(500).json({ message: "Unhandled exception" });
     }
 }

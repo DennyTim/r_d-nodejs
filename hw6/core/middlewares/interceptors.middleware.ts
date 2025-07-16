@@ -4,22 +4,30 @@ import {
     Response
 } from "express";
 import { Type } from "../models";
-import { runInterceptors } from "../utils";
+import {
+    Container,
+    runInterceptors
+} from "../utils";
 
 export const InterceptorsMiddleware = (
-    Ctl: Type,
+    controller: Type,
     handler: Function,
     globalInterceptors: Array<Type> = []
 ) => {
     return async (req: Request, res: Response, next: NextFunction) => {
-        const handlerFn = () => new Promise((resolve) => {
-            (req as any)._handlerWrapped = (...args: any[]) => resolve(args[0]);
-            next();
-        });
-
         try {
-            const result = await runInterceptors(Ctl, handler, req, res, handlerFn, globalInterceptors);
-            if (!res.headersSent) {
+            const result = await runInterceptors(
+                controller,
+                handler,
+                req,
+                res,
+                async () => {
+                    return handler.call(Container.resolve(controller), req, res);
+                },
+                globalInterceptors
+            );
+
+            if (!res.headersSent && result !== undefined) {
                 res.json(result);
             }
         } catch (err) {

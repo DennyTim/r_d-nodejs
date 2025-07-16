@@ -30,6 +30,7 @@ import { BooksService } from "./books.service";
 
 @Controller("/books")
 @UseGuards(RolesGuard)
+@UseInterceptor(ResponseTimerInterceptor)
 export class BooksController {
     constructor(private bookService: BooksService) {
     }
@@ -52,7 +53,6 @@ export class BooksController {
     }
 
     @Get("/timed")
-    @UseInterceptor(ResponseTimerInterceptor)
     public timed() {
         return this.bookService.findAll();
     }
@@ -63,7 +63,7 @@ export class BooksController {
         return this.bookService.findAll();
     }
 
-    @Get("/:id")
+    @Get("/get/:id")
     public one(@Param("id", new ParseIntPipe()) id: number) {
         return this.bookService.findOne(id);
     }
@@ -74,7 +74,7 @@ export class BooksController {
         return this.bookService.create(body);
     }
 
-    @Put("/:id")
+    @Put("/update/:id")
     public updateTitle(
         @Param("id", new ParseIntPipe()) id: string,
         @Body() body: { title: string }
@@ -82,7 +82,7 @@ export class BooksController {
         return this.bookService.update(id, body.title);
     }
 
-    @Patch("/:id")
+    @Patch("/patch/:id")
     public patchDescription(
         @Param("id", new ParseIntPipe()) id: string,
         @Body() body: { description: string }
@@ -90,7 +90,7 @@ export class BooksController {
         return this.bookService.updateDescription(+id, body.description);
     }
 
-    @Delete("/:id")
+    @Delete("/remove/:id")
     public deleteBook(@Param("id", new ParseIntPipe()) id: string) {
         return this.bookService.remove(+id);
     }

@@ -1,4 +1,8 @@
-import express from "express";
+import express, {
+    NextFunction,
+    Request,
+    Response
+} from "express";
 import {
     FiltersMiddleware,
     GuardsMiddleware,
@@ -111,17 +115,26 @@ export class NestFactory {
 
             routes.forEach((route: { method: Method; path: string; handlerName: string }) => {
                 const { method, path, handlerName } = route;
-                const handler = instance[handlerName] as Type<Promise<any>>;
+                const handler = instance[handlerName].bind(instance) as Type<Promise<any>>;
                 const fullPath = prefix + path;
 
                 console.log(`Registering [${method.toUpperCase()}] ${fullPath} → ${handlerName}`);
 
                 (router as express.Router)[method](
                     fullPath,
-                    asyncHandler(GuardsMiddleware(ctrl, handler, globalGuards)),
-                    asyncHandler(PipesMiddleware(instance, handler, globalPipes)),
-                    asyncHandler(InterceptorsMiddleware(ctrl, handler, globalInterceptors)),
-                    asyncHandler(FiltersMiddleware(ctrl, handler, globalFilters))
+                    asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+                        try {
+                            await GuardsMiddleware(ctrl, handler, globalGuards)(req, res, next);
+                            await PipesMiddleware(instance, handler, globalPipes)(req, res);
+                            await InterceptorsMiddleware(ctrl, handler, globalInterceptors)(req, res, next);
+                        } catch (error) {
+                            try {
+                                await FiltersMiddleware(ctrl, handler, globalFilters)(error, req, res, next);
+                            } catch {
+                                res.status(500).json({ message: "Unhandled exception in filter chain" });
+                            }
+                        }
+                    })
                 );
             });
         });
@@ -145,11 +158,14 @@ export class NestFactory {
         providers.forEach((provider: any) => {
             if (typeof provider === "function") {
                 Container.register(provider, provider);
+
             } else if (provider?.provide) {
                 const value = provider.useValue ?? provider.useClass;
+
                 if (!value) {
                     throw new Error(`No useValue/useClass for token ${String(provider.provide)}`);
                 }
+
                 Container.register(provider.provide, value);
             }
         });

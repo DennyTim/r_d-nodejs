@@ -15,7 +15,6 @@ const getInterceptors = (
 ): Type[] => {
     const controllerInterceptors = Reflect.getMetadata(INTERCEPTORS_METADATA, controllerClass) ?? [];
     const methodInterceptors = Reflect.getMetadata(INTERCEPTORS_METADATA, handler) ?? [];
-
     return [...global, ...controllerInterceptors, ...methodInterceptors];
 };
 
@@ -24,17 +23,18 @@ export async function runInterceptors(
     handler: Function,
     req: Request,
     res: Response,
-    handlerFn: () => any,
+    handlerFn: () => Promise<any>,
     global: Array<Type> = []
 ): Promise<any> {
-    const interceptors = getInterceptors(handler, controllerClass, global)
-        .map((item) => Container.resolve(item));
+    const interceptors = getInterceptors(handler, controllerClass, global);
 
     let next = handlerFn;
 
     for (const interceptor of interceptors.reverse()) {
+        const instance = Container.resolve(interceptor);
         const current = next;
-        next = () => interceptor.intercept({ req, res }, current);
+
+        next = () => instance.intercept({ req, res }, current);
     }
 
     return next();

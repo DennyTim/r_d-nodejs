@@ -146,9 +146,6 @@ async function processImage() {
   }
 }
 
-/**
- *  Start processing
- * */
 async function gracefulShutdown() {
   try {
     sharp.cache({ items: 0, files: 0, memory: 0 });

@@ -1,0 +1,38 @@
+{
+	"info": {
+		"_postman_id": "fc32a0d1-3aae-4be4-a199-8ee99c779996",
+		"name": "rd_hw8",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "7295332"
+	},
+	"item": [
+		{
+			"name": "zip",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/dench/OneDrive/Робочий стіл/large_test_images_with_broken.zip"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:3000/zip",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"zip"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

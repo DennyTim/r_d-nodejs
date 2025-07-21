@@ -164,16 +164,10 @@ export class ImgService {
         safeReject: (error: Error) => void
     ) {
         const workerPath = join(__dirname, "..", "worker", "worker.js");
-
-        const worker: Worker = new Worker(workerPath, {
-            workerData: {
-                imagePath,
-                options,
-                workerId,
-                requestId,
-                mutexBuffer: mutex.getBuffer()
-            }
-        } as WorkerOptions);
+        const workerPayload = {
+            workerData: { imagePath, options, workerId, requestId, mutexBuffer: mutex.getBuffer() }
+        } as WorkerOptions;
+        const worker: Worker = new Worker(workerPath, workerPayload);
 
         let isCompleted = false;
 
@@ -185,44 +179,11 @@ export class ImgService {
         };
 
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        worker.on("message", async (message: {
-            type: string;
-            error?: string;
-            workerId: number;
-            outputPath?: string;
-            originalPath?: string;
-        }): Promise<void> => {
-            try {
-                if (message.type === "success") {
-                    await this.updateState(state, mutex, "processed");
-
-                } else if (message.type === "error") {
-                    await this.updateState(state, mutex, "skipped");
-                }
-            } catch (error) {
-                safeReject(new Error(`Error handling worker message: ${error}`));
-            }
-        });
-
+        worker.on("message", this.onWorkerMessage(mutex, state, safeReject));
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        worker.on("error", async (error: Error) => {
-            safeReject(new Error(`Worker ${workerId} error: ${error}`));
-            try {
-                await this.updateState(state, mutex, "skipped");
-            } catch (updateError) {
-                safeReject(new Error(`Error updating state on worker error: ${updateError}`));
-            }
-            await markCompleted();
-        });
-
+        worker.on("error", this.onWorkerError(mutex, state, markCompleted, safeReject));
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        worker.on("exit", async (code) => {
-            if (code !== 0) {
-                safeReject(new Error(`Worker ${workerId} exited with code ${code}`));
-            }
-
-            await markCompleted();
-        });
+        worker.on("exit", this.onWorkerExit(workerId, markCompleted, safeReject));
 
         return worker;
     }
@@ -260,6 +221,57 @@ export class ImgService {
             throw new HttpException(`Failed to read images from directory: ${error}`, HttpStatus.BAD_REQUEST);
         }
         return results;
+    }
+
+
+    private onWorkerMessage(
+        mutex: SharedMutex,
+        state: SharedState,
+        safeReject: (error: Error) => void
+    ) {
+        return async (message: { type: string; }): Promise<void> => {
+            try {
+                if (message.type === "success") {
+                    await this.updateState(state, mutex, "processed");
+
+                } else if (message.type === "error") {
+                    await this.updateState(state, mutex, "skipped");
+                }
+            } catch (error) {
+                safeReject(new Error(`Error handling worker message: ${error}`));
+            }
+        };
+    }
+
+    private onWorkerError(
+        mutex: SharedMutex,
+        state: SharedState,
+        markCompleted: () => Promise<void>,
+        safeReject: (error: Error) => void
+    ) {
+        return async (error: Record<string, any>) => {
+            safeReject(new Error(`Worker ${error.workerId} error: ${error.error}`));
+            try {
+                await this.updateState(state, mutex, "skipped");
+            } catch (updateError) {
+                safeReject(new Error(`Error updating state on worker error: ${updateError}`));
+            }
+            await markCompleted();
+        };
+    }
+
+    private onWorkerExit(
+        workerId: number,
+        markCompleted: () => Promise<void>,
+        safeReject: (error: Error) => void
+    ) {
+        return async (code: any) => {
+            if (code !== 0) {
+                safeReject(new Error(`Worker ${workerId} exited with code ${code}`));
+            }
+
+            await markCompleted();
+        };
     }
 
     private resetThumbOptions(options?: Record<string, string | number>): void {

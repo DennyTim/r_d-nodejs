@@ -1,9 +1,10 @@
 const path = require("node:path");
+const { writeFile } = require("node:fs/promises");
 const { join } = path;
-const sharp = require("sharp");
 const { parentPort, workerData } = require("node:worker_threads");
-const { access, mkdir } = require("node:fs/promises");
+const { access, mkdir, readFile } = require("node:fs/promises");
 const { SharedMutex } = require("./mutex");
+const sharp = require("sharp");
 
 async function processImage() {
   const { imagePath, options, workerId, mutexBuffer } = workerData;
@@ -30,9 +31,23 @@ async function processImage() {
     const outputPath = join(outputDir, fileName);
 
     /**
-     *  Process image with Sharp
+     * #1 Read file as buffer that sharp wouldn't keep it opened
      * */
-    sharpInstance = sharp(imagePath)
+    const imageBuffer = await readFile(imagePath);
+
+    /**
+     * #2 Disable sharp cache for worker
+     * */
+    sharp.cache(false);
+
+    /**
+     *  Process image with Sharp using buffer instead of file path
+     *  ### Restrict control and size memory
+     * */
+    sharpInstance = sharp(imageBuffer, {
+      sequentialRead: false,
+      limitInputPixels: 268402689
+    })
       .resize(
         options.width,
         options.height, {
@@ -45,26 +60,50 @@ async function processImage() {
      * */
     switch (options.format) {
       case "jpeg":
-        sharpInstance = sharpInstance.jpeg({ quality: options.quality });
+        sharpInstance = sharpInstance.jpeg({
+          quality: options.quality,
+          progressive: false,
+          mozjpeg: false
+        });
         break;
       case "png":
-        sharpInstance = sharpInstance.png({ quality: options.quality });
+        sharpInstance = sharpInstance.png({
+          quality: options.quality,
+          progressive: false,
+          compressionLevel: 6
+        });
         break;
       case "webp":
-        sharpInstance = sharpInstance.webp({ quality: options.quality });
+        sharpInstance = sharpInstance.webp({
+          quality: options.quality,
+          effort: 4
+        });
         break;
     }
 
     /**
-     *  Save processed image
+     * #3 attempt to use toBuffer() instead of toFile()
      * */
-    await sharpInstance.toFile(outputPath);
+    const processedBuffer = await sharpInstance.toBuffer();
 
-    if (sharpInstance) {
-      sharpInstance.destroy();
-      sharpInstance = null;
+    /**
+     * Read buffer Result manually
+     * */
+    await writeFile(outputPath, processedBuffer);
+
+    /**
+     * #4 clean buffers
+     * */
+    imageBuffer.fill(0);
+    processedBuffer.fill(0);
+
+    /**
+     * #5 force clean sharp cache
+     * */
+    if (sharp.cache) {
+      sharp.cache({ items: 0, files: 0, memory: 0 });
+
     }
-
     /**
      *  Update state under mutex
      * */
@@ -82,11 +121,6 @@ async function processImage() {
     }
 
   } catch (error) {
-    if (sharpInstance) {
-      sharpInstance.destroy();
-      sharpInstance = null;
-    }
-
     /**
      *  Update state under mutex
      * */
@@ -99,9 +133,17 @@ async function processImage() {
         error: error instanceof Error ? error.message : String(error),
         originalPath: imagePath
       });
-
     } finally {
       mutex.unlock();
+    }
+  } finally {
+    if (sharpInstance) {
+      try {
+        sharpInstance.destroy();
+        sharpInstance = null;
+      } catch (destroyError) {
+        console.error(`Worker ${workerId}: Error destroying Sharp instance:`, destroyError);
+      }
     }
   }
 }
@@ -115,8 +157,4 @@ processImage().catch(error => {
     workerId: workerData.workerId,
     error: error instanceof Error ? error.message : String(error)
   });
-}).finally(() => {
-  if (global.gc) {
-    global.gc();
-  }
 });

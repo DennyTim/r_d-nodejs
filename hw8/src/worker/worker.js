@@ -1,15 +1,19 @@
 const path = require("node:path");
 const { writeFile } = require("node:fs/promises");
 const { join } = path;
-const { parentPort, workerData } = require("node:worker_threads");
+const { parentPort, workerData, threadId } = require("node:worker_threads");
 const { access, mkdir, readFile } = require("node:fs/promises");
 const { SharedMutex } = require("./mutex");
 const sharp = require("sharp");
 
+sharp.cache(false);
+sharp.concurrency(1);
+
 async function processImage() {
-  const { imagePath, options, workerId, mutexBuffer } = workerData;
+  const { imagePath, options, workerId, requestId, mutexBuffer } = workerData;
   const mutex = new SharedMutex(mutexBuffer);
   let sharpInstance = null;
+  let processedBuffer = null;
 
   try {
     /**
@@ -20,7 +24,7 @@ async function processImage() {
     /**
      * Create output directory if it doesn't exist
      * */
-    const outputDir = join(process.cwd(), "public", "avatars");
+    const outputDir = join(process.cwd(), "public", requestId);
     await mkdir(outputDir, { recursive: true });
 
     /**
@@ -31,14 +35,9 @@ async function processImage() {
     const outputPath = join(outputDir, fileName);
 
     /**
-     * #1 Read file as buffer that sharp wouldn't keep it opened
+     * Read file as buffer that sharp wouldn't keep it opened
      * */
     const imageBuffer = await readFile(imagePath);
-
-    /**
-     * #2 Disable sharp cache for worker
-     * */
-    sharp.cache(false);
 
     /**
      *  Process image with Sharp using buffer instead of file path
@@ -46,7 +45,8 @@ async function processImage() {
      * */
     sharpInstance = sharp(imageBuffer, {
       sequentialRead: false,
-      limitInputPixels: 268402689
+      limitInputPixels: 268402689,
+      pages: 1
     })
       .resize(
         options.width,
@@ -63,28 +63,31 @@ async function processImage() {
         sharpInstance = sharpInstance.jpeg({
           quality: options.quality,
           progressive: false,
-          mozjpeg: false
+          mozjpeg: false,
+          optimiseScans: false
         });
         break;
       case "png":
         sharpInstance = sharpInstance.png({
           quality: options.quality,
           progressive: false,
-          compressionLevel: 6
+          compressionLevel: 6,
+          palette: true
         });
         break;
       case "webp":
         sharpInstance = sharpInstance.webp({
           quality: options.quality,
-          effort: 4
+          effort: 4,
+          nearLossless: false
         });
         break;
     }
 
     /**
-     * #3 attempt to use toBuffer() instead of toFile()
+     * attempt to use toBuffer() instead of toFile()
      * */
-    const processedBuffer = await sharpInstance.toBuffer();
+    processedBuffer = await sharpInstance.toBuffer();
 
     /**
      * Read buffer Result manually
@@ -92,18 +95,11 @@ async function processImage() {
     await writeFile(outputPath, processedBuffer);
 
     /**
-     * #4 clean buffers
+     * clean buffers
      * */
     imageBuffer.fill(0);
     processedBuffer.fill(0);
 
-    /**
-     * #5 force clean sharp cache
-     * */
-    if (sharp.cache) {
-      sharp.cache({ items: 0, files: 0, memory: 0 });
-
-    }
     /**
      *  Update state under mutex
      * */
@@ -137,6 +133,8 @@ async function processImage() {
       mutex.unlock();
     }
   } finally {
+    processedBuffer = null;
+
     if (sharpInstance) {
       try {
         sharpInstance.destroy();
@@ -151,10 +149,64 @@ async function processImage() {
 /**
  *  Start processing
  * */
-processImage().catch(error => {
+async function gracefulShutdown() {
+  try {
+    sharp.cache({ items: 0, files: 0, memory: 0 });
+    if (global.gc) {
+      for (let i = 0; i < 3; i++) {
+        global.gc();
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+    }
+  } catch (error) {
+    console.error(`Worker ${workerData?.workerId}: Shutdown error:`, error);
+  }
+}
+
+process.on("SIGTERM", async () => {
+  await gracefulShutdown();
+  process.exit(0);
+});
+
+process.on("SIGINT", async () => {
+  await gracefulShutdown();
+  process.exit(0);
+});
+
+
+process.on("uncaughtException", (error) => {
   parentPort?.postMessage({
     type: "error",
-    workerId: workerData.workerId,
-    error: error instanceof Error ? error.message : String(error)
+    workerId: workerData?.workerId,
+    error: error.message
   });
+  process.exit(1);
 });
+
+process.on("unhandledRejection", (reason) => {
+  parentPort?.postMessage({
+    type: "error",
+    workerId: workerData?.workerId,
+    error: reason instanceof Error ? reason.message : String(reason)
+  });
+  process.exit(1);
+});
+
+processImage()
+  .then()
+  .catch(error => {
+    parentPort?.postMessage({
+      type: "error",
+      workerId: workerData?.workerId,
+      error: error instanceof Error ? error.message : String(error)
+    });
+  })
+  .finally(async () => {
+    await gracefulShutdown();
+
+    const exitTimer = setTimeout(() => {
+      process.exit(0);
+    }, 1000);
+
+    exitTimer.unref();
+  });

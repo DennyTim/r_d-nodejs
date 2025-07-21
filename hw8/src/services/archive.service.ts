@@ -1,4 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import {
+    HttpException,
+    HttpStatus,
+    Injectable
+} from "@nestjs/common";
 import {
     mkdir,
     rm,
@@ -38,7 +42,7 @@ export class ArchiveService {
 
             const errorMessage = error instanceof Error ? error.message : String(error);
 
-            throw new Error(`[ArchiveService] Extraction failed: ${errorMessage}`);
+            throw new HttpException(`[ArchiveService] Extraction failed: ${errorMessage}`, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -49,7 +53,7 @@ export class ArchiveService {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
 
-            console.error(`[ArchiveService] Failed to clear temp directory: ${errorMessage}`);
+            throw new HttpException(`[ArchiveService] Failed to clear temp directory: ${errorMessage}`, HttpStatus.BAD_REQUEST);
         }
     }
 }

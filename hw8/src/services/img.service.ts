@@ -1,6 +1,7 @@
 import {
-    Injectable,
-    Logger
+    HttpException,
+    HttpStatus,
+    Injectable
 } from "@nestjs/common";
 import { Dirent } from "fs";
 import { readdir } from "fs/promises";
@@ -12,10 +13,7 @@ import { ArchiveService } from "./archive.service";
 
 @Injectable()
 export class ImgService {
-    private readonly logger = new Logger(ImgService.name);
-    private mutex = new SharedMutex();
     private imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
-    private state: SharedState = { processed: 0, skipped: 0 };
     private options = {
         width: 150,
         height: 150,
@@ -28,64 +26,130 @@ export class ImgService {
 
     async processThumb(id: string, extractedTo: string) {
         this.resetThumbOptions();
-        this.resetState();
+
+        const mutex = new SharedMutex();
+        const state: SharedState = { processed: 0, skipped: 0 };
 
         const paths = await this.getAllImages(extractedTo);
 
         if (paths.length === 0) {
             await this.archiveService.clearTmp(id);
-            this.logger.log("No images to process");
-            return { ...this.state };
+            return state;
         }
 
         try {
-            await this.processAllWorkers(paths);
+            const finalState: SharedState = await this.processAllWorkers(paths, id, mutex, state);
             await new Promise((r) => setTimeout(r, 300));
+            const total = finalState.processed + finalState.skipped;
 
-            this.logger.log(`All workers completed. Processed: ${this.state.processed}, Skipped: ${this.state.skipped}`);
+            if (total !== paths.length) {
+                return Promise.reject(
+                    new HttpException(`Integrity check failed for ${id}: processed(${finalState.processed}) + skipped(${finalState.skipped}) = ${total}, expected ${paths.length}`, HttpStatus.BAD_REQUEST)
+                );
+            }
 
             await this.archiveService.clearTmp(id);
+
+            return finalState;
         } catch (error) {
-
-            this.logger.error("Error during worker processing:", error);
             await this.archiveService.clearTmp(id);
-        }
 
-        return { ...this.state };
+            throw error;
+        }
     }
 
-    private async processAllWorkers(paths: string[]): Promise<void> {
-        return new Promise((resolve) => {
+    private async processAllWorkers(
+        paths: string[],
+        requestId: string,
+        mutex: SharedMutex,
+        state: SharedState
+    ): Promise<SharedState> {
+        return new Promise((resolve: (value: SharedState | PromiseLike<SharedState>) => void, reject) => {
             let completedWorkers = 0;
             const totalWorkers = paths.length;
             const workers: Worker[] = [];
+            let isResolved = false;
 
-            const checkCompletion = () => {
+            const safeResolve = (finalState: SharedState) => {
+                if (!isResolved) {
+                    isResolved = true;
+
+                    workers.forEach(worker => {
+                        worker.terminate().catch(err =>
+                            reject(new Error(`Error terminating worker: ${err}`))
+                        );
+                    });
+
+                    resolve(finalState);
+                }
+            };
+
+            const safeReject = (error: Error) => {
+                if (!isResolved) {
+                    isResolved = true;
+
+                    workers.forEach(worker => {
+                        worker.terminate().catch(err =>
+                            reject(new Error(`Error terminating worker: ${err}`))
+                        );
+                    });
+                    reject(error);
+                }
+            };
+
+            const checkCompletion = async () => {
                 completedWorkers++;
 
                 if (completedWorkers === totalWorkers) {
-                    this.logger.log(`All ${totalWorkers} workers have completed`);
-                    resolve();
+                    await mutex.lock();
+                    const finalState = { ...state };
+                    mutex.unlock();
+
+                    safeResolve(finalState);
                 }
             };
 
             paths.forEach((imagePath, index) => {
-                const worker = this.createWorker(imagePath, this.options, index, checkCompletion);
-                workers.push(worker);
+                try {
+                    const worker = this.createWorker(
+                        imagePath,
+                        this.options,
+                        index,
+                        requestId,
+                        mutex,
+                        state,
+                        checkCompletion,
+                        safeReject
+                    );
+                    workers.push(worker);
+
+                } catch (error) {
+                    safeReject(error instanceof Error ? error : new Error(String(error)));
+                    return;
+                }
             });
 
-            setTimeout(() => {
-                if (completedWorkers < totalWorkers) {
-                    this.logger.warn(`Worker timeout: ${completedWorkers}/${totalWorkers} completed`);
-
-                    workers.forEach(worker => {
-                        worker.terminate().catch(err =>
-                            this.logger.warn("Error terminating worker:", err)
-                        );
-                    });
-                    resolve();
+            const timeout = setTimeout(() => {
+                if (!isResolved) {
+                    mutex
+                        .lock()
+                        .then(() => {
+                            const finalState = { ...state };
+                            mutex.unlock();
+                            safeResolve(finalState);
+                        })
+                        .catch(err => {
+                            safeReject(new Error(`Timeout with mutex error: ${err}`));
+                        });
                 }
-            }, 30000);
+            }, 60000);
+
+            const originalResolve = resolve;
+
+            resolve = (value: SharedState) => {
+                clearTimeout(timeout);
+                originalResolve(value);
+            };
         });
     }
 
@@ -93,7 +157,11 @@ export class ImgService {
         imagePath: string,
         options: Record<string, string | number>,
         workerId: number,
-        onCompleteCb: () => void
+        requestId: string,
+        mutex: SharedMutex,
+        state: SharedState,
+        onCompleteCb: () => Promise<void>,
+        safeReject: (error: Error) => void
     ) {
         const workerPath = join(__dirname, "..", "worker", "worker.js");
 
@@ -102,75 +170,95 @@ export class ImgService {
                 imagePath,
                 options,
                 workerId,
-                mutexBuffer: this.mutex.getBuffer()
+                requestId,
+                mutexBuffer: mutex.getBuffer()
             }
         } as WorkerOptions);
 
         let isCompleted = false;
 
-        const markCompleted = () => {
+        const markCompleted = async () => {
             if (!isCompleted) {
                 isCompleted = true;
-                onCompleteCb();
+                await onCompleteCb();
             }
         };
 
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        worker.on("message", async (message: { type: string, error: string }): Promise<void> => {
-            if (message.type === "success") {
-                await this.updateState("processed");
+        worker.on("message", async (message: {
+            type: string;
+            error?: string;
+            workerId: number;
+            outputPath?: string;
+            originalPath?: string;
+        }): Promise<void> => {
+            try {
+                if (message.type === "success") {
+                    await this.updateState(state, mutex, "processed");
 
-                this.logger.log(`Worker ${workerId}: Successfully processed ${imagePath}`);
-            } else if (message.type === "error") {
-                await this.updateState("skipped");
-
-                this.logger.error(`Worker ${workerId}: Failed to process ${imagePath} - ${message.error}`);
+                } else if (message.type === "error") {
+                    await this.updateState(state, mutex, "skipped");
+                }
+            } catch (error) {
+                safeReject(new Error(`Error handling worker message: ${error}`));
             }
         });
 
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        worker.on("error", async (error: Error): Promise<void> => {
-            await this.updateState("skipped");
-            this.logger.error(`Worker ${workerId} error:`, error);
-            markCompleted();
+        worker.on("error", async (error: Error) => {
+            safeReject(new Error(`Worker ${workerId} error: ${error}`));
+            try {
+                await this.updateState(state, mutex, "skipped");
+            } catch (updateError) {
+                safeReject(new Error(`Error updating state on worker error: ${updateError}`));
+            }
+            await markCompleted();
         });
 
-        worker.on("exit", (code) => {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        worker.on("exit", async (code) => {
             if (code !== 0) {
-                this.logger.error(`Worker ${workerId} stopped with exit code ${code}`);
+                safeReject(new Error(`Worker ${workerId} exited with code ${code}`));
             }
-            markCompleted();
+
+            await markCompleted();
         });
 
         return worker;
     }
 
-    private async updateState(field: keyof SharedState): Promise<void> {
-        await this.mutex.lock();
-
+    private async updateState(
+        state: SharedState,
+        mutex: SharedMutex,
+        field: keyof SharedState
+    ): Promise<void> {
+        await mutex.lock();
         try {
-            this.state[field]++;
+            state[field]++;
         } finally {
-            this.mutex.unlock();
+            mutex.unlock();
         }
     }
 
     private async getAllImages(dir: string): Promise<string[]> {
         const results: string[] = [];
-        const entries: Dirent<string>[] = await readdir(dir, { withFileTypes: true });
 
-        for (const entry of entries) {
-            const fullPath = join(dir, entry.name);
+        try {
+            const entries: Dirent[] = await readdir(dir, { withFileTypes: true });
 
-            const isCorrectExt = this.imageExtensions.includes(
-                entry.name.toLowerCase().slice(entry.name.lastIndexOf("."))
-            );
+            for (const entry of entries) {
+                const fullPath = join(dir, entry.name);
 
-            if (entry.isFile() && isCorrectExt) {
-                results.push(fullPath);
+                if (entry.isFile()) {
+                    const ext = entry.name.toLowerCase().slice(entry.name.lastIndexOf("."));
+                    if (this.imageExtensions.includes(ext)) {
+                        results.push(fullPath);
+                    }
+                }
             }
+        } catch (error) {
+            throw new HttpException(`Failed to read images from directory: ${error}`, HttpStatus.BAD_REQUEST);
         }
-
         return results;
     }
 
@@ -182,9 +270,5 @@ export class ImgService {
             format: "jpeg" as const,
             ...options
         };
-    }
-
-    private resetState(): void {
-        this.state = { processed: 0, skipped: 0 };
     }
 }

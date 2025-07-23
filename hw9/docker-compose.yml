@@ -1,0 +1,45 @@
+version: "3.9"
+
+networks:
+  chatnet:                # 👉 єдина bridge‑мережа для всіх сервісів
+    driver: bridge
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    networks: [chatnet]
+
+  server:
+    build:
+      context: ./server
+      target: dev
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - PORT=3000
+    depends_on: [redis]
+    expose: ["3000"]      # лишаємо лише expose, бо LB слухає всередині
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    networks:
+      chatnet:
+        aliases:
+          - api           # ← dns‑alias: api → один із server‑інстансів
+
+  client:
+    build: ./client
+    environment:
+      # браузер у середині контейнера «client» стукає до LB через внутр. DNS‑ім’я
+      - VITE_API_BASE=
+    networks: [ chatnet ]
+    expose: ["80"]        # лишаємо лише expose, бо LB слухає всередині
+
+  lb:
+    image: nginx:1.25-alpine
+    volumes:
+      - ./load-balancer/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"           # для хоста
+    depends_on: [server, client]
+    networks: [chatnet]

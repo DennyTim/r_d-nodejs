@@ -1,0 +1,115 @@
+{
+  "users": [
+    {
+      "id": "9f2f05e0-69fd-413f-983c-6b520277b718",
+      "name": "Denny",
+      "iconUrl": "/api/users/icons/denny-9f2f05e0-69fd-413f-983c-6b520277b718.png",
+      "createdAt": "2025-08-02T00:17:08.184Z",
+      "updatedAt": "2025-08-02T00:17:08.184Z"
+    },
+    {
+      "id": "b261ba22-c5a0-428b-bb8d-1aee59158279",
+      "name": "test",
+      "iconUrl": "/api/users/default/picture",
+      "createdAt": "2025-08-02T00:18:07.084Z",
+      "updatedAt": "2025-08-02T00:18:07.084Z"
+    },
+    {
+      "id": "f51637a3-1f45-4742-9a09-5d2e272df020",
+      "name": "Test 2",
+      "iconUrl": "/api/users/default/picture",
+      "createdAt": "2025-08-02T00:22:06.103Z",
+      "updatedAt": "2025-08-02T00:22:06.103Z"
+    }
+  ],
+  "chats": [
+    {
+      "id": "7acc9728-5943-4d7f-9637-07da9dfca634",
+      "name": "New test chat",
+      "members": [
+        "Denny",
+        "test"
+      ],
+      "createdAt": "2025-08-02T00:18:25.304Z",
+      "updatedAt": "2025-08-02T00:18:25.304Z",
+      "createdBy": "Denny"
+    },
+    {
+      "id": "3ee792ba-9a30-4073-b99d-79315bd114cd",
+      "name": "New test chat",
+      "members": [
+        "Denny",
+        "test"
+      ],
+      "createdAt": "2025-08-02T00:20:21.634Z",
+      "updatedAt": "2025-08-02T00:20:21.634Z",
+      "createdBy": "Denny"
+    },
+    {
+      "id": "9936222f-7653-477e-bd75-dac038d49177",
+      "name": "T2 D2",
+      "members": [
+        "Denny",
+        "Test 2"
+      ],
+      "createdAt": "2025-08-02T00:22:31.025Z",
+      "updatedAt": "2025-08-02T00:22:31.025Z",
+      "createdBy": "Denny"
+    },
+    {
+      "id": "4eeb2e80-5ce2-4405-ad5f-41bc8588bbfd",
+      "name": "Denny & Test 2",
+      "members": [
+        "Denny",
+        "Test 2"
+      ],
+      "createdAt": "2025-08-02T01:09:18.149Z",
+      "updatedAt": "2025-08-02T01:09:18.149Z",
+      "createdBy": "Denny"
+    }
+  ],
+  "messages": [
+    {
+      "id": "5a41e6b0-4b44-4ef7-80e5-521d4984cb63",
+      "chatId": "9936222f-7653-477e-bd75-dac038d49177",
+      "author": "Denny",
+      "text": "send",
+      "sentAt": "2025-08-02T00:36:21.732Z"
+    },
+    {
+      "id": "0e5240e8-6cb8-43c4-9868-fdd96eae4200",
+      "chatId": "9936222f-7653-477e-bd75-dac038d49177",
+      "author": "Denny",
+      "text": "hi",
+      "sentAt": "2025-08-02T00:36:30.020Z"
+    },
+    {
+      "id": "bc81cbdf-3864-47ae-88f7-79333724023b",
+      "chatId": "9936222f-7653-477e-bd75-dac038d49177",
+      "author": "Test 2",
+      "text": "hi",
+      "sentAt": "2025-08-02T00:36:43.282Z"
+    },
+    {
+      "id": "2c01b3ce-f836-4b54-b2dc-a149a07c57fc",
+      "chatId": "9936222f-7653-477e-bd75-dac038d49177",
+      "author": "Denny",
+      "text": "sss",
+      "sentAt": "2025-08-02T01:08:45.280Z"
+    },
+    {
+      "id": "a8ee016a-5173-4c31-8d5e-b66d01fa5265",
+      "chatId": "9936222f-7653-477e-bd75-dac038d49177",
+      "author": "Denny",
+      "text": "one more",
+      "sentAt": "2025-08-02T01:09:02.783Z"
+    },
+    {
+      "id": "ed547025-f596-4ef0-bece-828abe130625",
+      "chatId": "4eeb2e80-5ce2-4405-ad5f-41bc8588bbfd",
+      "author": "Denny",
+      "text": "Hi",
+      "sentAt": "2025-08-02T01:09:27.288Z"
+    }
+  ]
+}

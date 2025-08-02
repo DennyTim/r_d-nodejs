@@ -1,6 +1,8 @@
 import { Module } from "@nestjs/common";
 import { MulterModule } from "@nestjs/platform-express";
+import { ServeStaticModule } from "@nestjs/serve-static";
 import { memoryStorage } from "multer";
+import { join } from "path";
 import { ChatsModule } from "./chats/chats.module";
 import { MessagesModule } from "./messages/messages.module";
 import { RedisModule } from "./redis/redis.module";
@@ -10,7 +12,14 @@ import { WsModule } from "./ws/ws.module";
 @Module({
     imports: [
         MulterModule.register({ storage: memoryStorage() }),
-        RedisModule.forRoot({ url: process.env.REDIS_URL ?? "redis://localhost:6379" }),
+        ServeStaticModule.forRoot({
+            rootPath: join(__dirname, "..", "public"),
+            serveRoot: "/public"
+        }),
+        RedisModule.forRoot({
+            url: process.env.REDIS_URL ?? "redis://localhost:6379",
+            maxRetriesPerRequest: 3,
+        }),
         UsersModule,
         ChatsModule,
         MessagesModule,

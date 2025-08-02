@@ -13,7 +13,8 @@ import {
     UserDTO
 } from "./types";
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? "";      // '' = origin
+const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:3000";      // '' = origin
+const WS_API = import.meta.env.VITE_API_BASE ?? "http://localhost:3000";
 
 export class ChatService {
     private socket?: Socket;
@@ -112,7 +113,7 @@ export class ChatService {
         if (!this.userName) {
             throw new Error("Cannot connect to WebSocket without a user name");
         }
-        const ws = io(location.origin, {
+        const ws = io(WS_API, {
             path: "/ws",
             transports: ["websocket"],      // чистий WS
             auth: { user: this.userName },

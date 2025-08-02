@@ -103,9 +103,9 @@ export const ChatLayout = ({ userName }: { userName: string }) => {
 
         /* ---------------- chat + members events -------------- */
         useEffect(() => {
-            const c1 = svc.onChatCreated().subscribe((c) =>
-                setChats((p) => [...p, c])
-            );
+            const c1 = svc.onChatCreated().subscribe((c) => {
+                return setChats((p) => [...p, c]);
+            });
             const c2 = svc.onMembersUpdated().subscribe((u) =>
                 setChats((p) => {
                     const result = p.map((c) =>
@@ -194,17 +194,21 @@ export const ChatLayout = ({ userName }: { userName: string }) => {
                     </Box>
                     <Divider/>
                     <List sx={{ flexGrow: 1, overflowY: "auto" }}>
-                        {chats
-                            .toReversed()
-                            .map((c) => (
-                                <ChatItem
-                                    key={c.id}
-                                    chat={c}
-                                    selected={c.id === current?.id}
-                                    onSelect={selectChat}
-                                    you={userName}
-                                />
-                            ))}
+                        {
+                            chats
+                                .toReversed()
+                                .map((c) => {
+                                    return (
+                                        <ChatItem
+                                            key={c.id}
+                                            chat={c}
+                                            selected={c.id === current?.id}
+                                            onSelect={selectChat}
+                                            you={userName}
+                                        />
+                                    );
+                                })
+                        }
                     </List>
                 </Box>
 

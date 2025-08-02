@@ -4,8 +4,14 @@ import { FileStore } from "../store/file-store";
 import { ChatGateway } from "./chat.gateway";
 
 @Module({
-    imports: [RedisModule],
+    imports: [
+        RedisModule
+    ],
     providers: [
+        ChatGateway,
+        FileStore
+    ],
+    exports: [
         ChatGateway,
         FileStore
     ]

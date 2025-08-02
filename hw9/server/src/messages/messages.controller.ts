@@ -1,37 +1,44 @@
 import {
     Body,
     Controller,
-    ForbiddenException,
     Get,
-    Headers,
     Param,
     Post,
-    Query
+    Query,
+    UseGuards
 } from "@nestjs/common";
+import {
+    CurrentUser,
+    User
+} from "../chats/role.decorator";
+import { RoleGuard } from "../chats/role.guard";
 import { MessageDTO } from "../dto";
-import { FileStore } from "../store/file-store";
+import { MessagesService } from "./messages.service";
 
 @Controller("/api/chats/:id/messages")
+@UseGuards(RoleGuard)
 export class MessagesController {
-    constructor(private store: FileStore) {
+    constructor(private messagesService: MessagesService) {
     }
 
     @Get()
-    list(
-        @Headers("X-User") user: string,
+    @User()
+    async list(
+        @CurrentUser() user: string,
         @Param("id") chatId: string,
         @Query("cursor") cursor?: string,
         @Query("limit") limit = "30"
     ) {
-        throw new ForbiddenException("Not implemented yet");
+        return this.messagesService.getMessages(chatId, user, cursor, limit);
     }
 
     @Post()
-    create(
-        @Headers("X-User") author: string,
+    @User()
+    async create(
+        @CurrentUser() user: string,
         @Param("id") chatId: string,
         @Body("text") text: string
-    ): MessageDTO {
-        throw new ForbiddenException("Not implemented yet");
+    ): Promise<MessageDTO> {
+        return this.messagesService.createMessage(chatId, user, text);
     }
 }

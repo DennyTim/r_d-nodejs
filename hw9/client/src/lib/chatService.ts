@@ -13,8 +13,8 @@ import {
     UserDTO
 } from "./types";
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:3000";      // '' = origin
-const WS_API = import.meta.env.VITE_API_BASE ?? "http://localhost:3000";
+export const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:3000";      // '' = origin
+export const WS_API = import.meta.env.VITE_API_BASE ?? "http://localhost:3000";
 
 export class ChatService {
     private socket?: Socket;

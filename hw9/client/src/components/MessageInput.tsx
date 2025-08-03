@@ -34,11 +34,18 @@ export const MessageInput = ({ disabled, onSend, onTyping }: Props) => {
         if (!ref.current) {
             return;
         }
-        const keyup$ = fromEvent<KeyboardEvent>(ref.current, "keydown").pipe(map(() => true));
-        const blur$ = fromEvent<FocusEvent>(ref.current, "blur").pipe(map(() => false));
-        const typing$ = merge(keyup$, blur$).pipe(distinctUntilChanged(), debounceTime(300));
+
+        const keyup$ = fromEvent<KeyboardEvent>(ref.current, "keydown")
+            .pipe(map(() => true));
+
+        const blur$ = fromEvent<FocusEvent>(ref.current, "blur")
+            .pipe(map(() => false));
+
+        const typing$ = merge(keyup$, blur$)
+            .pipe(distinctUntilChanged(), debounceTime(300));
 
         const sub = typing$.subscribe(onTyping);
+
         return () => sub.unsubscribe();
     }, []);
 

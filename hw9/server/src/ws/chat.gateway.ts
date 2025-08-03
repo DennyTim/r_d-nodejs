@@ -255,9 +255,6 @@ export class ChatGateway implements OnGatewayConnection, OnModuleDestroy {
                     targetChat: chatId
                 }
             });
-
-            this.server?.to(`chat:${chatId}`).emit("message", messageDto);
-            this.logger.log(`Message sent in chat ${chatId} by ${user}`);
         } catch (error: any) {
             this.logger.error(`Send error:`, error);
             client.emit("error", { message: error.message });

@@ -114,13 +114,7 @@ export const ChatLayout = ({ userName }: { userName: string }) => {
                         (c) => c.members.includes(userName)
                     );
 
-                    console.log("Updated chats:", result);
                     const isBanned = !u.members.includes(userName);
-                    console.log({
-                        isBanned,
-                        currentId: currentIdRef.current,
-                        chatId: u.chatId
-                    });
 
                     if (isBanned && currentIdRef.current === u.chatId) {
                         leaveCurrentChat();

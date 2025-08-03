@@ -20,6 +20,13 @@
       "iconUrl": "/api/users/default/picture",
       "createdAt": "2025-08-02T00:22:06.103Z",
       "updatedAt": "2025-08-02T00:22:06.103Z"
+    },
+    {
+      "id": "2c6ae2de-98c8-4110-8257-9881bc7a4e47",
+      "name": "test3",
+      "iconUrl": "/api/users/default/picture",
+      "createdAt": "2025-08-03T10:16:20.664Z",
+      "updatedAt": "2025-08-03T10:16:20.664Z"
     }
   ],
   "chats": [
@@ -66,6 +73,17 @@
       "createdAt": "2025-08-02T01:09:18.149Z",
       "updatedAt": "2025-08-02T01:09:18.149Z",
       "createdBy": "Denny"
+    },
+    {
+      "id": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "name": "new chat",
+      "members": [
+        "Denny",
+        "test3"
+      ],
+      "createdAt": "2025-08-03T10:16:35.008Z",
+      "updatedAt": "2025-08-03T10:16:35.008Z",
+      "createdBy": "Denny"
     }
   ],
   "messages": [
@@ -110,6 +128,202 @@
       "author": "Denny",
       "text": "Hi",
       "sentAt": "2025-08-02T01:09:27.288Z"
+    },
+    {
+      "id": "fc413133-e8be-4e01-beac-9e3dadd27793",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "test3",
+      "text": "hi",
+      "sentAt": "2025-08-03T10:16:47.245Z"
+    },
+    {
+      "id": "976947bd-2ff0-473f-b500-7d61e6b5dcc5",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "test3",
+      "text": "what's up",
+      "sentAt": "2025-08-03T10:17:25.103Z"
+    },
+    {
+      "id": "26509864-899f-4e30-8dd9-b88222d9f27a",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "test3",
+      "text": "1",
+      "sentAt": "2025-08-03T10:17:42.123Z"
+    },
+    {
+      "id": "08d3e326-161b-4353-b144-8e539e034d98",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "test3",
+      "text": "2",
+      "sentAt": "2025-08-03T10:18:01.753Z"
+    },
+    {
+      "id": "f86ed6ba-c676-4009-8d3c-06bc3fb8ca3d",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "test3",
+      "text": "123",
+      "sentAt": "2025-08-03T10:18:52.424Z"
+    },
+    {
+      "id": "ab1b3c52-2dc4-43ab-97a0-3aebdeefc7dd",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "123",
+      "sentAt": "2025-08-03T10:19:14.137Z"
+    },
+    {
+      "id": "2ed26f06-9873-4add-863b-5bfbec6746cd",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "test3",
+      "text": "123",
+      "sentAt": "2025-08-03T10:27:29.348Z"
+    },
+    {
+      "id": "2082995e-3e34-4cc7-92ee-b06a05693831",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "4344",
+      "sentAt": "2025-08-03T10:50:12.698Z"
+    },
+    {
+      "id": "5967dd1d-2b3e-4ada-b9d8-17845948cc82",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "5555",
+      "sentAt": "2025-08-03T10:50:39.682Z"
+    },
+    {
+      "id": "894bfcb0-527b-49f2-93fa-2d0427eea5b8",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "666",
+      "sentAt": "2025-08-03T10:51:02.306Z"
+    },
+    {
+      "id": "5d89da27-336e-4004-a2f8-5912415340cc",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "777",
+      "sentAt": "2025-08-03T10:55:11.195Z"
+    },
+    {
+      "id": "335978c7-f448-4d90-ab1f-3ddc0a8cddea",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "888",
+      "sentAt": "2025-08-03T10:56:00.932Z"
+    },
+    {
+      "id": "74c081f8-4651-49c7-9b95-3d3cfbdeb011",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "999",
+      "sentAt": "2025-08-03T10:57:09.454Z"
+    },
+    {
+      "id": "475c2892-627d-4899-9f6c-1c9bbab94f49",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "111",
+      "sentAt": "2025-08-03T10:57:53.572Z"
+    },
+    {
+      "id": "f1e9df99-7841-4957-ad55-2b5ac50ca4e1",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "111",
+      "sentAt": "2025-08-03T10:57:58.915Z"
+    },
+    {
+      "id": "0ede7d93-acd8-4614-a36a-84d3ea1bb7a7",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "111",
+      "sentAt": "2025-08-03T10:58:01.112Z"
+    },
+    {
+      "id": "a77ccda1-a96d-474a-9817-00a1bb7b866a",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "111",
+      "sentAt": "2025-08-03T10:58:18.739Z"
+    },
+    {
+      "id": "a3882a83-9ccd-4f26-aa02-d4572a7bb7d1",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "0000",
+      "sentAt": "2025-08-03T10:58:24.370Z"
+    },
+    {
+      "id": "94f81d1a-fc39-44cf-ab70-5b4cdbdbf3cf",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "1111",
+      "sentAt": "2025-08-03T10:58:32.330Z"
+    },
+    {
+      "id": "f56e1add-b978-40d7-acf0-8b1696f761ac",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "555",
+      "sentAt": "2025-08-03T10:58:56.290Z"
+    },
+    {
+      "id": "3496728b-fbda-4e96-8f24-06213f847bf4",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "666",
+      "sentAt": "2025-08-03T11:00:18.899Z"
+    },
+    {
+      "id": "ece82877-e63d-43f2-bb7e-7d196beefb28",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "777",
+      "sentAt": "2025-08-03T11:01:20.115Z"
+    },
+    {
+      "id": "ffc64b0e-f01d-45d8-9f00-31079c90fb26",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "1234",
+      "sentAt": "2025-08-03T11:12:32.171Z"
+    },
+    {
+      "id": "4ad926fa-7198-4e5b-9b64-59c23f4cc682",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "123444444",
+      "sentAt": "2025-08-03T11:12:41.307Z"
+    },
+    {
+      "id": "276b9ce6-8690-40e2-891b-fea9febf2fbf",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "test3",
+      "text": "I am here",
+      "sentAt": "2025-08-03T11:13:13.228Z"
+    },
+    {
+      "id": "8381706d-d8b5-4154-bc47-d2f35e05715c",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "ok",
+      "sentAt": "2025-08-03T11:13:17.680Z"
+    },
+    {
+      "id": "11220fc5-9db3-4429-8819-db2859ed4af2",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "test3",
+      "text": "Nice",
+      "sentAt": "2025-08-03T11:13:26.778Z"
+    },
+    {
+      "id": "1ab6c83a-c2b2-4b09-8f59-2f9f649faa86",
+      "chatId": "633e8787-ff9a-40f2-a230-0baa3014c446",
+      "author": "Denny",
+      "text": "nice)",
+      "sentAt": "2025-08-03T11:13:34.354Z"
     }
   ]
 }

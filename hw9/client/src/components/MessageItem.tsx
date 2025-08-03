@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import { format } from "date-fns";
 import React from "react";
+import { API_BASE } from "../lib/chatService";
 import {
     MessageDTO,
     UserDTO
@@ -22,11 +23,14 @@ export const MessageItem = (data: MessageItemProps) => {
     const { msg, you, users } = data;
     const u = users[msg.author];
     const isMe = msg.author === you;
+    const iconUrl = `${API_BASE}${u?.iconUrl}`;
 
     return (
         <ListItem sx={{ flexDirection: isMe ? "row-reverse" : "row", gap: 2 }}>
+
             <ListItemAvatar sx={{ minWidth: 40 }}>
-                <Avatar src={u?.iconUrl}>{u ? u.name[0].toUpperCase() : "?"}</Avatar>
+                <ListItemText primary={isMe ? you : msg.author}/>
+                <Avatar src={iconUrl}>{u ? u.name[0].toUpperCase() : "?"}</Avatar>
             </ListItemAvatar>
 
             <ListItemText

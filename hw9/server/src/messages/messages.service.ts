@@ -3,6 +3,7 @@ import {
     ForbiddenException,
     Injectable
 } from "@nestjs/common";
+import * as crypto from "crypto";
 import { MessageDTO } from "../dto";
 import { FileStore } from "../store/file-store";
 
@@ -14,8 +15,12 @@ export class MessagesService {
 
     async getMessages(chatId: string, user: string, cursor: string | undefined, limit: string) {
         const chats = await this.store.readChats();
-        const hasAccess = chats.some(chat => chat.id === chatId);
+        const users = await this.store.readUsers();
+        if (!users.some(item => item.name === user)) {
+            throw new ForbiddenException(`Current user doesn't exist`);
+        }
 
+        const hasAccess = chats.some(chat => chat.id === chatId);
         if (!hasAccess) {
             throw new ForbiddenException(`You aren't a member of this chat`);
         }

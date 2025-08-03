@@ -6,6 +6,7 @@ import {
     Injectable,
     NotFoundException
 } from "@nestjs/common";
+import * as crypto from "crypto";
 import { ChatDTO } from "../dto";
 import { FileStore } from "../store/file-store";
 import { ChatGateway } from "../ws/chat.gateway";

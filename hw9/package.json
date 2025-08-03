@@ -1,10 +1,6 @@
 {
     "name": "rxjs-nest-chat-monorepo",
     "private": true,
-    "workspaces": [
-        "server",
-        "client"
-    ],
     "scripts": {
         "dev": "docker compose -f docker-compose.yml up --build --scale server=2",
         "build": "pnpm -r run build",

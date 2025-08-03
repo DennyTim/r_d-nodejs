@@ -14,7 +14,7 @@ import {
 } from "./types";
 
 export const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:3000";      // '' = origin
-export const WS_API = import.meta.env.VITE_API_BASE ?? "http://localhost:3000";
+export const WS_API = window.location.origin;    // '' = origin
 
 export class ChatService {
     private socket?: Socket;

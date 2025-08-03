@@ -17,8 +17,7 @@ import { WsModule } from "./ws/ws.module";
             serveRoot: "/public"
         }),
         RedisModule.forRoot({
-            url: process.env.REDIS_URL ?? "redis://localhost:6379",
-            maxRetriesPerRequest: 3,
+            url: process.env.REDIS_URL || 'redis://redis:6379'
         }),
         UsersModule,
         ChatsModule,

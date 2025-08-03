@@ -11,6 +11,7 @@ import {
     WebSocketGateway,
     WebSocketServer
 } from "@nestjs/websockets";
+import * as crypto from "crypto";
 import Redis from "ioredis";
 import { Subject } from "rxjs";
 import { filter } from "rxjs/operators";
@@ -60,26 +61,22 @@ export class ChatGateway implements OnGatewayConnection, OnModuleDestroy {
         this.sub.on("message", (_, raw) => {
             const parsed = JSON.parse(raw);
             if (parsed.src === INSTANCE_ID) {
-
                 return;
             }
-            console.log("Received event:", parsed);
-            this.event$.next(parsed);
+            console.log("Received remote event:", parsed);
+            this.handleRemoteEvent(parsed);
         });
 
         this.event$
             .pipe(filter((e) => e.meta?.local))
-            .subscribe((e) =>
+            .subscribe((e) => {
+                this.handleLocalEvent(e);
                 this.redis.publish("chat-events", JSON.stringify({
                     ...e,
-                    meta: undefined,
+                    meta: { ...e.meta, local: false }, // Прибираємо local flag
                     src: INSTANCE_ID
-                }))
-            );
-
-        this.event$
-            .pipe(filter((e) => !e.meta?.local))
-            .subscribe((e) => this.handleRemoteEvent(e));
+                }));
+            });
     }
 
     onModuleDestroy() {
@@ -104,24 +101,6 @@ export class ChatGateway implements OnGatewayConnection, OnModuleDestroy {
         this.userSockets.get(user)!.add(client.id);
         this.logger.log(`User ${user} connected with socket ${client.id}`);
 
-        this.event$
-            .pipe(filter(event => {
-                const user = client.data.user;
-
-                if (event.meta?.targetUsers) {
-                    return event.meta.targetUsers.includes(user!);
-                }
-
-                if (event.meta?.targetChat) {
-                    return client.data.joinedChats?.has(event.meta.targetChat) || false;
-                }
-
-                return false;
-            }))
-            .subscribe((event) => {
-                client.emit(event.ev, event.data);
-            });
-
         client.on("disconnect", () => {
             const user = client.data.user;
 
@@ -142,11 +121,13 @@ export class ChatGateway implements OnGatewayConnection, OnModuleDestroy {
         });
     }
 
-    private handleRemoteEvent(event: ChatEvent) {
+    private handleLocalEvent(event: ChatEvent) {
+        this.logger.log(`Handling local event: ${event.ev}`);
+
         if (event.meta?.targetUsers) {
+            // Відправляємо конкретним користувачам
             event.meta.targetUsers.forEach((user) => {
                 const userSocketSet = this.userSockets.get(user);
-
                 if (userSocketSet) {
                     userSocketSet.forEach(socketId => {
                         const socket = this.server?.sockets.sockets.get(socketId);
@@ -156,8 +137,29 @@ export class ChatGateway implements OnGatewayConnection, OnModuleDestroy {
                     });
                 }
             });
-        } else {
-            this.server?.to(`chat:${event.meta?.targetChat}`).emit(event.ev, event.data);
+        } else if (event.meta?.targetChat) {
+            // Відправляємо в чат
+            this.server?.to(`chat:${event.meta.targetChat}`).emit(event.ev, event.data);
+        }
+    }
+
+    private handleRemoteEvent(event: ChatEvent) {
+        this.logger.log(`Handling remote event: ${event.ev}`);
+
+        if (event.meta?.targetUsers) {
+            event.meta.targetUsers.forEach((user) => {
+                const userSocketSet = this.userSockets.get(user);
+                if (userSocketSet) {
+                    userSocketSet.forEach(socketId => {
+                        const socket = this.server?.sockets.sockets.get(socketId);
+                        if (socket) {
+                            socket.emit(event.ev, event.data);
+                        }
+                    });
+                }
+            });
+        } else if (event.meta?.targetChat) {
+            this.server?.to(`chat:${event.meta.targetChat}`).emit(event.ev, event.data);
         }
     }
 
@@ -197,10 +199,12 @@ export class ChatGateway implements OnGatewayConnection, OnModuleDestroy {
         const user = client.data.user;
         const { chatId } = body;
 
-        client.join(`chat:${chatId}`);
-        client.data.joinedChats?.delete(chatId);
+        if (user) {
+            //TODO: if user isn't chat member
+        }
 
-        this.logger.log(`User ${user} left chat ${chatId}`);
+        client.leave(`chat:${chatId}`);
+        client.data.joinedChats?.delete(chatId);
     }
 
     @SubscribeMessage("send")
@@ -272,6 +276,7 @@ export class ChatGateway implements OnGatewayConnection, OnModuleDestroy {
 
             const typingData = { chatId, user, isTyping };
 
+            client.to(`chat:${chatId}`).emit("typing", typingData);
             this.event$.next({
                 ev: "typing",
                 data: typingData,
@@ -280,8 +285,6 @@ export class ChatGateway implements OnGatewayConnection, OnModuleDestroy {
                     targetChat: chatId
                 }
             });
-
-            client.to(`chat:${chatId}`).emit("typing", typingData);
         } catch (error: any) {
             this.logger.error("Typing error:", error);
         }
@@ -296,21 +299,6 @@ export class ChatGateway implements OnGatewayConnection, OnModuleDestroy {
                 targetUsers: chat.members
             }
         });
-
-        for (const member of chat.members) {
-            const userSocketSet = this.userSockets.get(member);
-
-            if (userSocketSet) {
-                userSocketSet.forEach(socketId => {
-                    const socket = this.server?.sockets.sockets.get(socketId);
-                    if (socket) {
-                        socket.emit("chatCreated", chat);
-                    }
-                });
-            }
-        }
-
-        this.logger.log(`Chat created notification sent for chat ${chat.id}`);
     }
 
     async notifyMembersUpdated(chatId: string, members: string[]) {
@@ -324,19 +312,6 @@ export class ChatGateway implements OnGatewayConnection, OnModuleDestroy {
                 targetUsers: members
             }
         });
-
-        for (const member of members) {
-            const userSocketSet = this.userSockets.get(member);
-            if (userSocketSet) {
-                userSocketSet.forEach(socketId => {
-                    const socket = this.server?.sockets.sockets.get(socketId);
-
-                    if (socket) {
-                        socket.emit("membersUpdated");
-                    }
-                });
-            }
-        }
 
         this.logger.log(`Members updated notification sent for chat ${chatId}`);
     }

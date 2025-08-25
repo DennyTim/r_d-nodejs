@@ -3,8 +3,8 @@ import SQL, { SQLStatement } from "sql-template-strings";
 
 export class Orm<T extends { id: number }> {
     constructor(
-        private readonly table: string,
-        protected readonly pool: Pool
+        public readonly table: string,
+        public readonly pool: Pool
     ) {
     }
 
@@ -112,7 +112,6 @@ export class Orm<T extends { id: number }> {
                 .append(SQL`${value}`);
         });
 
-        query = query.append(", update_at = CURRENT_TIMESTAMP");
         query = query.append(SQL` WHERE id = ${id} RETURNING *`);
 
         const client = await this.pool.connect();

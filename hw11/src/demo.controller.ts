@@ -38,6 +38,39 @@ export class DemoController {
         }
     }
 
+    @Get("test-connection")
+    async testConnection() {
+        try {
+            const client = await this.demoService.productRepo.pool.connect();
+            const result = await client.query("SELECT current_user, current_database(), inet_server_addr(), inet_server_port()");
+            client.release();
+
+            return {
+                success: true,
+                message: "Database connection successful",
+                connection_info: result.rows[0],
+                config: {
+                    host: process.env.DATABASE_HOST,
+                    port: process.env.DATABASE_PORT,
+                    user: process.env.DATABASE_USER,
+                    database: process.env.DATABASE_NAME
+                }
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: "Database connection failed",
+                error: error.message,
+                config: {
+                    host: process.env.DATABASE_HOST,
+                    port: process.env.DATABASE_PORT,
+                    user: process.env.DATABASE_USER,
+                    database: process.env.DATABASE_NAME
+                }
+            };
+        }
+    }
+
     @Get("products")
     async getProducts() {
         try {

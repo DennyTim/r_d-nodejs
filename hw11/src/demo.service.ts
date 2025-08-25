@@ -9,8 +9,8 @@ import { ProductRepository } from "./repositories/product.repo";
 
 @Injectable()
 export class DemoService {
-    private readonly logger = new Logger(DemoService.name);
-    private readonly productRepo = new ProductRepository();
+    public readonly logger = new Logger(DemoService.name);
+    public readonly productRepo = new ProductRepository();
 
     async initializeDatabase(): Promise<void> {
         this.logger.log("Initializing database...");

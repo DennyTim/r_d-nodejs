@@ -13,8 +13,8 @@ import { UsersService } from "./users.service";
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
     constructor(
-        private configService: ConfigService,
-        private usersService: UsersService
+        private usersService: UsersService,
+        configService: ConfigService
     ) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
